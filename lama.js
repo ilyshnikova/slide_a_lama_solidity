@@ -6,7 +6,7 @@ for (let account of web3.eth.accounts) {
 	document.querySelector('#start select').appendChild(option);
 }
 
-function createContract(callback) {
+function createContract(contractAddress, callback) {
 	// print acount balance
 	console.log(web3.eth.getBalance(account));
 	// unlock this account
@@ -14,22 +14,22 @@ function createContract(callback) {
 
 	var lamaContract = web3.eth.contract(lamaAbi);
 
-	if (contract == '') {
+	if (contractAddress == '') {
 		// deploy contract
 		var lama = lamaContract.new(
 			{
 				from: web3.eth.accounts[0],
 				data: lamaBin,
 				gas: '4700000'
-			}, function (e, contract){
-			console.log(e, contract);
-			if (typeof contract.address !== 'undefined') {
-				console.log('Contract mined! address: ' + contract.address + ' transactionHash: ' + contract.transactionHash);
-				callback(contract.address);
+			}, function (e, c){
+			console.log(e, c);
+			if (typeof c.address !== 'undefined') {
+				console.log('Contract mined! address: ' + c.address + ' transactionHash: ' + c.transactionHash);
+				callback(c);
 			}
 		 });
 	} else {
-		callback(lamaContract.at(contractAddress));
+		callback(lamaContract.at(lamaContract.at(contractAddress)));
 	}
 }
 
@@ -63,26 +63,31 @@ function bindBorders() {
 document.querySelector('#start').addEventListener('submit', function(ev) {
 	ev.preventDefault();
 	account = document.querySelector('#start select').value;
-	contract = document.querySelector('#start input').value;
-	document.querySelector('#start').setAttribute("hidden", '');
-	if (contract == '') {
+	contractAddress = document.querySelector('#start input').value;
+	document.getElementById('start').disabled = true;
+	if (contractAddress == '') {
 		document.querySelector('#wait_contract').removeAttribute("hidden");
 	} else {
 		document.querySelector('#wait_player').removeAttribute("hidden");
 	}
-	createContract(createdContract => {
+	createContract(contractAddress, createdContract => {
 		contract = createdContract;
-		contract.PlayerAdded({}, function(error, ev) {
-			if (ev.arg.index.toNumber() == 1) {
-				if (ev.arg.player1 != address && ev.arg.player2 != address) {
+		document.querySelector('#contract_address').setAttribute("value", 'For contract ' + contract.address);
+		document.querySelector('#wait_contract').setAttribute("hidden", '');
+		document.querySelector('#wait_player').removeAttribute("hidden");
+		contract.PlayerAdded({}, function(error, result) {
+			if (result.args.index.toNumber() == 1) {
+				if (result.args.player1 != address && result.arg.player2 != address) {
 					alert("You are not in game, there is no available positions.");
 					location.reload();
 				}
 				document.querySelector('#wait_player').setAttribute("hidden", '');
+				document.querySelector('#start').setAttribute("hidden", '');
+
 				document.querySelector('#field').removeAttribute("hidden");
 			}
 		})
-		contract.AddPlayer({from: address, gas: 100000}, function(error, result) {});
+		contract.AddPlayer({from: account, gas: 100000}, function(error, result) {});
 	});
 
 });
