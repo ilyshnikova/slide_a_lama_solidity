@@ -31,7 +31,7 @@ function createContract(contractAddress, callback) {
 			}
 		 });
 	} else {
-		callback(lamaContract.at(lamaContract.at(contractAddress)));
+		callback(lamaContract.at(contractAddress));
 	}
 }
 
