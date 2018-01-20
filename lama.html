@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>asd</title>
+		<style>
+			html, body {
+				height: 100%;
+			}
+
+			body {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+			}
+
+			tr:not(:first-child) td:not(:first-child):not(:last-child) {
+				border: 2px solid black;
+			}
+
+			td {
+				width: 4em;
+				height: 4em;
+			}
+
+			tr:first-child td:not(:first-child):not(:last-child):hover,
+			tr:not(:first-child) td:first-child:hover,
+			tr:not(:first-child) td:last-child:hover {
+				background: #eee;
+			}
+
+			#start button {
+				font-size: 4em;
+				width: 100%;
+				border: 2px solid black;
+				background: white;
+			}
+
+			#start input {
+				font-size: 2em;
+				border: 2px solid black;
+			}
+		</style>
+	</head>
+	<body>
+		<form id="start">
+			<button> Start </button>
+			<br><br>
+			<input type=text placeholder="Contract address" />
+			<br><br>
+			<select> </select>
+		</form>
+		<table hidden id="field">
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+			</tr>
+
+		</table>
+		<script src="web3.min.js"></script>
+		<script src="contract_data.js"></script>
+		<script src="lama.js"></script>
+	</body>
+</html>
+

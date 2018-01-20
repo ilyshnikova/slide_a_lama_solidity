@@ -1,5 +1,7 @@
 pragma solidity ^0.4.8;
 contract Lama {
+    address[2] players = [0, 0];
+
     address first_player = 0;
     address second_player = 0;
 
@@ -12,6 +14,10 @@ contract Lama {
     uint8 score_size = 7;
     int[7] scores = [10, 20, 30, 40, 70, 100, 150];
 
+    uint8 field_update_index = 0;
+
+    enum Side {Top, Left, Right}
+
     function Lama() public {}
 
     uint64 _seed = 0;
@@ -21,31 +27,67 @@ contract Lama {
         return _seed % upper;
     }
 
-    function min(uint8 a, uint8 b) private returns (uint8) {
+    function min(uint8 a, uint8 b) private pure returns (uint8) {
         return a < b ? a : b;
     }
 
+    event PlayerAdded(address player, uint8 index);
+    event FieldChanging(int8[5][5] feld, uint8 changing_index);
+    event AvailableBlocks(int8[3] blocks);
+
     function AddPlayer() public payable {
-        if (first_player == 0) {
-            first_player = msg.sender;
-        } else if (second_player == 0) {
-            second_player = msg.sender;
+        if (players[0] == 0) {
+            players[0] = msg.sender;
+            PlayerAdded(players[0], 0);
+        } else if (players[1] == 0) {
+            players[1] = msg.sender;
+            PlayerAdded(players[1], 1);
             for (uint8 i = 0; i < field_size; i++) {
                 for (uint8 j = 0; j < field_size; j++) {
                     field[i][j] = int8(Random(score_size));
                 }
             }
 
+            FieldChanging(field, field_update_index++);
+
             for (i = 0; i < queue_size; ++i) {
                 queue[i] = int8(Random(score_size));
             }
+
+            AvailableBlocks(queue);
         } else {
             revert();
         }
     }
-    enum Side {Top, Left, Right}
+
+    function FallDown(uint8 x, uint8 y) private {
+        //dont fall emptyness || already at the bottom || already under nonempty block
+        if (field[x][y] == -1 || y + 1 == field_size || field[x][y + 1] != -1) {
+            return;
+        }
+
+        for (uint8 row = y + 1; row < field_size; ++row) {
+            if (field[x][row] != -1) {
+                break;
+            }
+        }
+        field[x][row] = field[x][y];
+        field[x][y] = -1;
+    }
+
+    function Gravity() private {
+        for (uint8 col = 0; col < field_size; ++col) {
+            for (uint8 row = field_size - 1; row-- > 0;) {
+                FallDown(col, row);
+            }
+        }
+    }
 
     function Step(uint8 index, Side side) public {
+        if (msg.sender != players[0]) {
+            revert();
+        }
+
         if (side == Side.Top) {
             if (field[0][index] != -1) {
                 for (uint8 row = field_size - 1; row > 0; --row) {
@@ -69,6 +111,9 @@ contract Lama {
             for (uint8 col = min(empty_index, field_size - 1); col > 0; --col) {
                 field[col][index] = field[col - 1][index];
             }
+            if (empty_index != field_size) {
+                FallDown(index, empty_index);
+            }
 
             field[0][index] = queue[0];
         } else if (side == Side.Right) {
@@ -79,6 +124,8 @@ contract Lama {
                 field[col][index] = field[col + 1][index];
             }
 
+            FallDown(empty_index, index);
+
             field[field_size - 1][index] = queue[0];
         } else {
             revert();
@@ -87,5 +134,22 @@ contract Lama {
             queue[i - 1] = queue[i];
         }
         queue[queue_size - 1] = int8(Random(score_size));
+
+        FieldChanging(field, field_update_index++);
+        AvailableBlocks(queue);
+
+        address player = players[0];
+        players[0] = players[1];
+        players[1] = player;
     }
+
+
+    function GetField() public view returns (int8[5][5]) {
+        return field;
+    }
+
+    function GetBlocks() public view returns (int8[3]) {
+        return queue;
+    }
+
 }
