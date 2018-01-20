@@ -1,6 +1,6 @@
 //let web3 = new Web3(new Web3.providers.HttpProvider("http://olegts-dev.haze.yandex.net:12344"));
 
-let web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:12344"));
+let web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:12345"));
 
 for (let account of web3.eth.accounts) {
 	let option = document.createElement('option');
@@ -12,7 +12,7 @@ function createContract(contractAddress, callback) {
 	// print acount balance
 	console.log(web3.eth.getBalance(account));
 	// unlock this account
-	web3.personal.unlockAccount(account, "");
+	web3.personal.unlockAccount(account, "password");
 
 	var lamaContract = web3.eth.contract(lamaAbi);
 
@@ -31,7 +31,7 @@ function createContract(contractAddress, callback) {
 			}
 		 });
 	} else {
-		callback(lamaContract.at(lamaContract.at(contractAddress).address));
+		callback(lamaContract.at(lamaContract.at(contractAddress)));
 	}
 }
 

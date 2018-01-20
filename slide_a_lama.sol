@@ -37,7 +37,7 @@ contract Lama {
         return a < b ? a : b;
     }
 
-    event PlayerAdded(address player1, address player2, uint8 index);
+    event PlayerAdded(address player, uint8 index);
 
     // increase changing_index = field_update_index++ each event
     event FieldChanging(int8[5][5] feld, uint8 changing_index);
@@ -50,10 +50,10 @@ contract Lama {
     function AddPlayer() public payable {
         if (players[0].player_address == 0) {
             players[0] = Player({player_address: msg.sender, score: 0});
-            PlayerAdded(players[0].player_address, 0,  0);
+            PlayerAdded(players[0].player_address, 0);
         } else if (players[1].player_address == 0) {
             players[1] = Player({player_address: msg.sender, score: 0});
-            PlayerAdded(players[0],player_address, players[1].player_address, 1);
+            PlayerAdded(players[1].player_address, 1);
             for (uint8 i = 0; i < field_size; i++) {
                 for (uint8 j = 0; j < field_size; j++) {
                     field[i][j] = int8(Random(score_size));
