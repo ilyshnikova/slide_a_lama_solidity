@@ -6,15 +6,15 @@ for (let account of web3.eth.accounts) {
 	document.querySelector('#start select').appendChild(option);
 }
 
-function createContract(contractAddress, callback) {
+function createContract(callback) {
 	// print acount balance
-	console.log(web3.eth.getBalance(web3.eth.accounts[0]));
+	console.log(web3.eth.getBalance(account));
 	// unlock this account
-	web3.personal.unlockAccount(web3.eth.coinbase, "password");
+	web3.personal.unlockAccount(account, "password");
 
 	var lamaContract = web3.eth.contract(lamaAbi);
 
-	if (contractAddress == '') {
+	if (contract == '') {
 		// deploy contract
 		var lama = lamaContract.new(
 			{
@@ -24,9 +24,8 @@ function createContract(contractAddress, callback) {
 			}, function (e, contract){
 			console.log(e, contract);
 			if (typeof contract.address !== 'undefined') {
-				alert('Contract mined! address: ' + contract.address + ' transactionHash: ' + contract.transactionHash)
 				console.log('Contract mined! address: ' + contract.address + ' transactionHash: ' + contract.transactionHash);
-				callback(contract);
+				callback(contract.address);
 			}
 		 });
 	} else {
@@ -35,6 +34,7 @@ function createContract(contractAddress, callback) {
 }
 
 var contract;
+var account;
 
 function showField() {
 	document.querySelector('#start').setAttribute("hidden", '');
@@ -62,9 +62,38 @@ function bindBorders() {
 
 document.querySelector('#start').addEventListener('submit', function(ev) {
 	ev.preventDefault();
-	createContract(document.querySelector('#start input').value, createdContract => {
+	account = document.querySelector('#start select').value;
+	contract = document.querySelector('#start input').value;
+	document.querySelector('#start').setAttribute("hidden", '');
+	if (contract == '') {
+		document.querySelector('#wait_contract').removeAttribute("hidden");
+	} else {
+		document.querySelector('#wait_player').removeAttribute("hidden");
+	}
+	createContract(createdContract => {
 		contract = createdContract;
-		showField();
+		contract.PlayerAdded({}, function(error, ev) {
+			if (ev.arg.index.toNumber() == 1) {
+				if (ev.arg.player1 != address && ev.arg.player2 != address) {
+					alert("You are not in game, there is no available positions.");
+					location.reload();
+				}
+				document.querySelector('#wait_player').setAttribute("hidden", '');
+				document.querySelector('#field').removeAttribute("hidden");
+			}
+		})
+		contract.AddPlayer({from: address, gas: 100000}, function(error, result) {});
 	});
 
 });
+
+
+/*
+
+вызывать методы - contract.<method>(<argument1>, ..., {from: ..., gas: ...}, function(error, result) {...})
+
+подписываться на события - contract.<event>({}, function(error, ev){...})
+
+аргументы у события - ev.args[name], числа там в виде BigNumber, приводятся к обычным методом toNumber
+
+*/

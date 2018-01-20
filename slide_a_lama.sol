@@ -1,6 +1,12 @@
 pragma solidity ^0.4.8;
 contract Lama {
-    address[2] players = [0, 0];
+
+    struct Player {
+        address player_address;
+        uint64 score;
+    }
+
+    Player[2] players;
 
     address first_player = 0;
     address second_player = 0;
@@ -31,17 +37,23 @@ contract Lama {
         return a < b ? a : b;
     }
 
-    event PlayerAdded(address player, uint8 index);
+    event PlayerAdded(address player1, address player2, uint8 index);
+
+    // increase changing_index = field_update_index++ each event
     event FieldChanging(int8[5][5] feld, uint8 changing_index);
     event AvailableBlocks(int8[3] blocks);
 
+    // event after player step was finished
+    event StepFinished(address player_address);
+    event PlayerScore(address player_address, uint64 score);
+
     function AddPlayer() public payable {
-        if (players[0] == 0) {
-            players[0] = msg.sender;
-            PlayerAdded(players[0], 0);
-        } else if (players[1] == 0) {
-            players[1] = msg.sender;
-            PlayerAdded(players[1], 1);
+        if (players[0].player_address == 0) {
+            players[0] = Player({player_address: msg.sender, score: 0});
+            PlayerAdded(players[0].player_address, 0,  0);
+        } else if (players[1].player_address == 0) {
+            players[1] = Player({player_address: msg.sender, score: 0});
+            PlayerAdded(players[0],player_address, players[1].player_address, 1);
             for (uint8 i = 0; i < field_size; i++) {
                 for (uint8 j = 0; j < field_size; j++) {
                     field[i][j] = int8(Random(score_size));
@@ -83,8 +95,92 @@ contract Lama {
         }
     }
 
+    function ColGravity(uint8 col, uint8 start_row_index) private {
+        for (uint8 row = start_row_index; row-- > 0;) {
+                FallDown(col, row);
+        }
+    }
+
+    function CheckWins() private returns (bool) {
+        //check horizontal blocks sequences
+        for (uint8 row = 0; row < field_size; ++row) {
+            for (uint8 col = 0; col <= 2; ++col) {
+                int8 value = field[col][row];
+                if (value == -1) {
+                    continue;
+                }
+                uint64 count = 1;
+                uint8 index = col;
+
+                // find win line
+                while (index + 1 < field_size && field[index][row] == field[index + 1][row]) {
+                    count++;
+                    index++;
+                }
+
+                // if number of equal blocks more then 2 destroy it and update currnet player score
+                // and fall all blocks above destroyed bocks
+                if (count >= 3) {
+                    for (;col <= index; ++col) {
+                        field[col][row] = -1;
+                    }
+                    // show destroyed blocks
+                    FieldChanging(field, field_update_index++);
+
+                    // show falled blocks
+                    Gravity();
+                    FieldChanging(field, field_update_index++);
+
+
+                    players[0].score += uint64(scores[uint8(value)]) * (count - 2);
+                    PlayerScore(players[0].player_address, players[0].score);
+                    return true;
+                }
+            }
+        }
+
+        //check vertical blocks sequences
+        for (col = 0; col < field_size; ++col) {
+            for (row = 0; row <= 2; ++row) {
+                value = field[col][row];
+                if (value == -1) {
+                    continue;
+                }
+
+                count = 1;
+                index = row;
+                // find win line
+                while (index + 1 < field_size && field[col][index] == field[col][index + 1]) {
+                    count++;
+                    index++;
+                }
+
+                // if number of equal blocks more then 2 destroy it and update currnet player score
+                if (count >= 3) {
+                    for (;row <= index; ++row) {
+                        field[col][row] = -1;
+                    }
+                    // Show field with destroyed blocks
+                    FieldChanging(field, field_update_index++);
+
+                    // fall all blocks above destroyed bocks
+                    ColGravity(col, field_size - 1);
+                    FieldChanging(field, field_update_index++);
+
+                    players[0].score += uint64(scores[uint8(value)]) * (count - 2);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    function FindEqualBlocks() private {
+        while (CheckWins()) {}
+    }
+
     function Step(uint8 index, Side side) public {
-        if (msg.sender != players[0]) {
+        if (msg.sender != players[0].player_address) {
             revert();
         }
 
@@ -130,6 +226,11 @@ contract Lama {
         } else {
             revert();
         }
+
+        // try to find equal blocks sequences
+        CheckWins();
+
+        // shift new blocks queue and add one new
         for (uint8 i = 1; i < queue_size; ++i) {
             queue[i - 1] = queue[i];
         }
@@ -138,9 +239,10 @@ contract Lama {
         FieldChanging(field, field_update_index++);
         AvailableBlocks(queue);
 
-        address player = players[0];
+        Player player = players[0];
         players[0] = players[1];
         players[1] = player;
+        StepFinished(players[1].player_address);
     }
 
 
