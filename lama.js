@@ -1,4 +1,6 @@
-let web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:12345"));
+//let web3 = new Web3(new Web3.providers.HttpProvider("http://olegts-dev.haze.yandex.net:12344"));
+
+let web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:12344"));
 
 for (let account of web3.eth.accounts) {
 	let option = document.createElement('option');
@@ -10,7 +12,7 @@ function createContract(contractAddress, callback) {
 	// print acount balance
 	console.log(web3.eth.getBalance(account));
 	// unlock this account
-	web3.personal.unlockAccount(account, "password");
+	web3.personal.unlockAccount(account, "");
 
 	var lamaContract = web3.eth.contract(lamaAbi);
 
@@ -29,7 +31,7 @@ function createContract(contractAddress, callback) {
 			}
 		 });
 	} else {
-		callback(lamaContract.at(lamaContract.at(contractAddress)));
+		callback(lamaContract.at(lamaContract.at(contractAddress).address));
 	}
 }
 
@@ -65,14 +67,11 @@ document.querySelector('#start').addEventListener('submit', function(ev) {
 	account = document.querySelector('#start select').value;
 	contractAddress = document.querySelector('#start input').value;
 	document.getElementById('start').disabled = true;
-	if (contractAddress == '') {
-		document.querySelector('#wait_contract').removeAttribute("hidden");
-	} else {
-		document.querySelector('#wait_player').removeAttribute("hidden");
-	}
+	document.querySelector('#wait_contract').removeAttribute("hidden");
 	createContract(contractAddress, createdContract => {
 		contract = createdContract;
-		document.querySelector('#contract_address').setAttribute("value", 'For contract ' + contract.address);
+		document.getElementById('contract_address').innerHTML = 'For contract ' + contract.address;
+
 		document.querySelector('#wait_contract').setAttribute("hidden", '');
 		document.querySelector('#wait_player').removeAttribute("hidden");
 		contract.PlayerAdded({}, function(error, result) {
