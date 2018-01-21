@@ -37,32 +37,49 @@ contract Lama {
         return a < b ? a : b;
     }
 
-    event PlayerAdded(address player, uint8 index);
+    event PlayerAdded(address player1, address player2, uint8 index);
 
     // increase changing_index = field_update_index++ each event
-    event FieldChanging(int8[5][5] feld, uint8 changing_index);
+    event FieldChanging(int8[5][5] field, uint8 changing_index);
     event AvailableBlocks(int8[3] blocks);
 
     // event after player step was finished
     event StepFinished(address player_address);
     event PlayerScore(address player_address, uint64 score);
 
+
     function AddPlayer() public payable {
         if (players[0].player_address == 0) {
             players[0] = Player({player_address: msg.sender, score: 0});
-            PlayerAdded(players[0].player_address, 0);
+            PlayerAdded(players[0].player_address, players[1].player_address, 0);
         } else if (players[1].player_address == 0) {
             players[1] = Player({player_address: msg.sender, score: 0});
-            PlayerAdded(players[1].player_address, 1);
-            for (uint8 i = 0; i < field_size; i++) {
-                for (uint8 j = 0; j < field_size; j++) {
-                    field[i][j] = int8(Random(score_size));
+            PlayerAdded(players[0].player_address, players[1].player_address, 1);
+            for (uint8 col = 0; col < field_size; col++) {
+                for (uint8 row = 0; row < field_size; row++) {
+                    int8 first = -1;
+                    int8 second = -1;
+                    if (row > 1) {
+                        if (field[col][row - 1] == field[col][row - 2]) {
+                            first = field[col][row - 1];
+                        }
+                    }
+                    if (col > 1) {
+                        if (field[col - 1][row] == field[col - 2][row]) {
+                            second = field[col - 1][row];
+                        }
+                    }
+                    field[col][row] = int8(Random(score_size));
+
+                    while (field[col][row] == first || field[col][row] == second) {
+                        field[col][row]= int8(Random(score_size));
+                    }
                 }
             }
 
             FieldChanging(field, field_update_index++);
 
-            for (i = 0; i < queue_size; ++i) {
+            for (uint8 i = 0; i < queue_size; ++i) {
                 queue[i] = int8(Random(score_size));
             }
 
@@ -88,7 +105,7 @@ contract Lama {
     }
 
     function Gravity() private {
-        for (uint8 col = 0; col < field_size; ++col) {
+        for (uint8 col = field_size  - 1; col-- > 0;) {
             for (uint8 row = field_size - 1; row-- > 0;) {
                 FallDown(col, row);
             }
@@ -164,7 +181,8 @@ contract Lama {
                     FieldChanging(field, field_update_index++);
 
                     // fall all blocks above destroyed bocks
-                    ColGravity(col, field_size - 1);
+                    //ColGravity(col, field_size - 1);
+                    Gravity();
                     FieldChanging(field, field_update_index++);
 
                     players[0].score += uint64(scores[uint8(value)]) * (count - 2);
@@ -179,8 +197,9 @@ contract Lama {
         while (CheckWins()) {}
     }
 
-    function Step(uint8 index, Side side) public {
+    function Step(uint8 index, Side side) public returns (string) {
         if (msg.sender != players[0].player_address) {
+            return "incorrect player";
             revert();
         }
 
@@ -225,6 +244,7 @@ contract Lama {
             field[field_size - 1][index] = queue[0];
         } else {
             revert();
+            return "incorrect side";
         }
 
         // try to find equal blocks sequences
@@ -243,6 +263,7 @@ contract Lama {
         players[0] = players[1];
         players[1] = player;
         StepFinished(players[1].player_address);
+        return "success";
     }
 
 
@@ -252,6 +273,10 @@ contract Lama {
 
     function GetBlocks() public view returns (int8[3]) {
         return queue;
+    }
+
+    function GetPlayers() public view returns (address player1, address player2) {
+        return (players[0].player_address, players[1].player_address);
     }
 
 }

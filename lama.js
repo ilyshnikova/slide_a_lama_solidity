@@ -40,27 +40,108 @@ var account;
 
 function showField() {
 	document.querySelector('#start').setAttribute("hidden", '');
-	document.querySelector('#field').removeAttribute("hidden");
+	document.querySelector('#game_field').removeAttribute("hidden");
 }
 
 function bindBorders() {
-	let borders = [
-		['tr:first-child td:not(:first-child):not(:last-child):hover', 1/*top*/],
-		['tr:not(:first-child) td:first-child:hover', 2/*left*/],
-		['tr:not(:first-child) td:last-child:hover', 3/*right*/],
-	];
-
-	for (let [selector, side] of borders) {
-		let cells = document.querySelectorAll(selector);
-		for (let i = 0; i < cells.length; i++) {
-			cells[i].addEventListener('click', function(ev, i=i, side=side) {
-				console.log(i, side);
-			});
-		}
+	console.log("Blocks changed:");
+	GetBlocks();
+	let cells = document.querySelectorAll('#insert')
+	for (let i = 0; i < cells.length; i++) {
+		let index = cells[i].getAttribute('index');
+		let side = cells[i].getAttribute('side');
+		cells[i].addEventListener('click', function(ev) {
+			contract.Step(parseInt(index), parseInt(side), {from: account, gas: 2100000}, function(error, result) {});
+			console.log(index, side);
+		});
 	}
 }
 
+var colorMap = {"-1": "f2f2f2", "0": "9e0142", "1": "f46d43", "2": "fdae61", "3": "ffffbf", "4": "abdda4", "5": "3288bd", "6": "5e4fa2"};
 
+function createTable(table) {
+	console.log("Field changed to:");
+	GetField();
+	let result = '';
+	for (let row = -1; row < table.length; ++row) {
+		result += '<tr>\n';
+		for (let col = -1; col <= table[0].length; ++col) {
+			if (col != -1 && row != -1 && col != table[0].length) {
+				result += '<td style="background-color:#' + colorMap[table[row][col].toString()] + ';border: 2px solid black;"></td>\n';
+			} else if (row == -1 && (col != -1 || col != table[0].length)) {
+				result += '<td id="insert" side=1 index=' + col + '></td>';
+			} else if ((col == -1 || col == table[0].length) && row != -1) {
+				result += '<td id="insert" side=' + (col == -1 ? 2 : 3) + ' index=' + row + '></td>';
+			} else {
+				result += '<td></td>';
+			}
+		}
+		result += '</tr>\n';
+	}
+	return result;
+}
+
+function createBlockQueue(blocks) {
+	result = '<tr><td></td>\n';
+
+	result += '<td style="background-color:#' + colorMap[blocks[0].toString()] + ';border: 3px solid black;box-shadow: 6px 6px 6px #ccc;"></td>\n';
+
+	result += '<td></td>\n';
+
+	result += '<td style="background-color:#' + colorMap[blocks[1].toString()] + ';border: 2px solid black;"></td>\n';
+	result += '<td style="background-color:#' + colorMap[blocks[2].toString()] + ';border: 2px solid black;"></td>\n';
+
+	result += '<td></td><td></td></tr>';
+
+	return result;
+}
+
+function bindEvents() {
+	contract.PlayerAdded({}, function(error, result) {
+		if (result.args.index.toNumber() == 1) {
+			if (result.args.player1 != account && result.args.player2 != account) {
+				alert("You are not in game, there is no available positions.");
+				location.reload();
+			}
+			document.querySelector('#wait_player').setAttribute("hidden", '');
+			document.querySelector('#start').setAttribute("hidden", '');
+
+			document.querySelector('#game_field').removeAttribute("hidden");
+		}
+	})
+
+	contract.FieldChanging({}, function(error, result) {
+		document.getElementById('field').innerHTML = createTable(result.args.field);
+		bindBorders();
+	});
+
+	contract.AvailableBlocks({}, function(error, result) {
+		document.getElementById('blocks').innerHTML = createBlockQueue(result.args.blocks);
+	});
+
+
+}
+
+function GetField() {
+	contract.GetField({from:account, gas:2100000}, function(error, result) {
+		str = '';
+		for (i = 0; i < 5; ++i) {
+			for (j = 0;j < 5; ++j) {
+				str += result[i][j] + ' ';
+			}
+			str += '\n';
+		}
+		console.log(str);
+	})
+}
+
+function GetBlocks() {
+	contract.GetBlocks({from:account, gas:2100000}, function(error, result) {
+		str = result[0] + ' ' + result[1] + ' ' + result[2];
+		console.log(str);
+	})
+
+}
 
 document.querySelector('#start').addEventListener('submit', function(ev) {
 	ev.preventDefault();
@@ -74,19 +155,8 @@ document.querySelector('#start').addEventListener('submit', function(ev) {
 
 		document.querySelector('#wait_contract').setAttribute("hidden", '');
 		document.querySelector('#wait_player').removeAttribute("hidden");
-		contract.PlayerAdded({}, function(error, result) {
-			if (result.args.index.toNumber() == 1) {
-				if (result.args.player1 != address && result.arg.player2 != address) {
-					alert("You are not in game, there is no available positions.");
-					location.reload();
-				}
-				document.querySelector('#wait_player').setAttribute("hidden", '');
-				document.querySelector('#start').setAttribute("hidden", '');
-
-				document.querySelector('#field').removeAttribute("hidden");
-			}
-		})
-		contract.AddPlayer({from: account, gas: 100000}, function(error, result) {});
+		bindEvents();
+		contract.AddPlayer({from: account, gas:  3000000}, function(error, result) {});
 	});
 
 });

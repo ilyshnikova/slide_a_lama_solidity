@@ -15,10 +15,6 @@
 				justify-content: center;
 			}
 
-			tr:not(:first-child) td:not(:first-child):not(:last-child) {
-				border: 2px solid black;
-			}
-
 			td {
 				width: 4em;
 				height: 4em;
@@ -50,6 +46,7 @@
 				position: absolute;
 				left: 0;
 				top: 0;
+				bottom: 0;
 				font-size: 2em;
 				color: #f3f3f3
 			}
@@ -62,6 +59,7 @@
 				position: absolute;
 				left: 0;
 				top: 0;
+				bottom: 0;
 				font-size: 2em;
 				color: #f3f3f3
 			}
@@ -101,63 +99,13 @@
 			<p id=contract_address>  <p> <p> wait for player <p>
 		</div>
 
-		<table hidden id="field">
-			<tr>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-			</tr>
-			<tr>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-			</tr>
-			<tr>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-			</tr>
-			<tr>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-			</tr>
-			<tr>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-			</tr>
-			<tr>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-			</tr>
-
-		</table>
+		<div hidden id="game_field">
+			<table id=blocks>
+			</table>
+			<br>
+			<table id="field">
+			</table>
+		</div>
 		<script src="web3.min.js"></script>
 		<script src="contract_data.js"></script>
 		<script src="lama.js"></script>
