@@ -13,6 +13,10 @@ Create testnode
 
 geth --identity "MyTestNetNode" --nodiscover --networkid 1999 --datadir ~/.ethereum-testnet init genesis1.json
 
+Run node
+
+geth --datadir ~/.ethereum-testnet console --rpc --rpcport 12345 --rpccorsdomain "*" --rpcapi web3,eth,personal 2>> log.log
+
 
 Create new account
 geth account new --datadir ~/.ethereum-testnet
