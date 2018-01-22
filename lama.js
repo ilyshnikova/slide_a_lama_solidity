@@ -12,7 +12,7 @@ function createContract(contractAddress, callback) {
 	// print acount balance
 	console.log(web3.eth.getBalance(account));
 	// unlock this account
-	web3.personal.unlockAccount(account, "password");
+	web3.personal.unlockAccount(account, "");
 
 	var lamaContract = web3.eth.contract(lamaAbi);
 
@@ -43,6 +43,16 @@ function showField() {
 	document.querySelector('#game_field').removeAttribute("hidden");
 }
 
+function blockAndWait(message) {
+	document.getElementById('field').innerHTML = message;
+	document.getElementById('start').disabled = true;
+}
+
+function unblockWailt() {
+	document.getElementById('field').innerHTML = '';
+	document.getElementById('start').disabled = false;
+}
+
 function bindBorders() {
 	console.log("Blocks changed:");
 	GetBlocks();
@@ -51,7 +61,9 @@ function bindBorders() {
 		let index = cells[i].getAttribute('index');
 		let side = cells[i].getAttribute('side');
 		cells[i].addEventListener('click', function(ev) {
-			contract.Step(parseInt(index), parseInt(side), {from: account, gas: 2100000}, function(error, result) {});
+			blockAndWait("Wait for transaction...");
+			res = contract.Step(parseInt(index), parseInt(side), {from: account, gas: 2100000}, function(error, result) {console.log(result)});
+			blockAndWait("Wait for transaction " + res.address);
 			console.log(index, side);
 		});
 	}
@@ -63,17 +75,18 @@ function createTable(table) {
 	console.log("Field changed to:");
 	GetField();
 	let result = '';
-	for (let row = -1; row < table.length; ++row) {
+	for (let row = -1; row < table[0].length; ++row) {
 		result += '<tr>\n';
 		for (let col = -1; col <= table[0].length; ++col) {
-			if (col != -1 && row != -1 && col != table[0].length) {
-				result += '<td style="background-color:#' + colorMap[table[row][col].toString()] + ';border: 2px solid black;"></td>\n';
-			} else if (row == -1 && (col != -1 || col != table[0].length)) {
-				result += '<td id="insert" side=1 index=' + col + '></td>';
-			} else if ((col == -1 || col == table[0].length) && row != -1) {
-				result += '<td id="insert" side=' + (col == -1 ? 2 : 3) + ' index=' + row + '></td>';
-			} else {
+
+                       if (col != -1 && row != -1 && col != table.length) {
+                               result += '<td style="background-color:#' + colorMap[table[col][row].toString()] + ';border: 2px solid black;"></td>\n';
+                       } else if (row == -1 && (col != -1 || col != table.length)) {
+                               result += '<td id="insert" side=0 index=' + col + '></td>';
+                       } else if ((col == -1 || col == table.length) && row != -1) {
+                               result += '<td id="insert" side=' + (col == -1 ? 1 : 2) + ' index=' + row + '></td>';
 				result += '<td></td>';
+
 			}
 		}
 		result += '</tr>\n';
@@ -106,6 +119,10 @@ function bindEvents() {
 			document.querySelector('#wait_player').setAttribute("hidden", '');
 			document.querySelector('#start').setAttribute("hidden", '');
 
+
+			if (result.args.player1 != account) {
+				blockAndWait('Wait for second player step...');
+			}
 			document.querySelector('#game_field').removeAttribute("hidden");
 		}
 	})
@@ -117,6 +134,14 @@ function bindEvents() {
 
 	contract.AvailableBlocks({}, function(error, result) {
 		document.getElementById('blocks').innerHTML = createBlockQueue(result.args.blocks);
+	});
+
+	contract.StepFinished({}, function(error, result) {
+		if (result.args.player_address == account) {
+			unblockWailt();
+		} else {
+			blockAndWait('Wait for second player step...')
+		}
 	});
 
 

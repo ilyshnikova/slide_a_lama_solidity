@@ -47,6 +47,9 @@ contract Lama {
     event StepFinished(address player_address);
     event PlayerScore(address player_address, uint64 score);
 
+    event TopSide();
+    event LeftSide();
+    event RightSide();
 
     function AddPlayer() public payable {
         if (players[0].player_address == 0) {
@@ -204,8 +207,10 @@ contract Lama {
         }
 
         if (side == Side.Top) {
-            if (field[0][index] != -1) {
-                for (uint8 row = field_size - 1; row > 0; --row) {
+            TopSide();
+            if (field[index][0] != -1) {
+                // destroy bottom block and shift all top blocks
+                for (uint8 row = field_size - 1; row >= 1; --row) {
                     field[index][row] = field[index][row - 1];
                 }
                 field[index][0] = queue[0];
@@ -218,6 +223,7 @@ contract Lama {
                 field[index][row - 1] = queue[0];
             }
         } else if (side == Side.Left) {
+            LeftSide();
             uint8 empty_index = 0;
             while (empty_index < field_size && field[empty_index][index] != -1) {
                 ++empty_index;
@@ -232,10 +238,11 @@ contract Lama {
 
             field[0][index] = queue[0];
         } else if (side == Side.Right) {
-            empty_index = field_size - 1;
+            RightSide();
+            empty_index = field_size;
             while (empty_index > 0 && field[--empty_index][index] != -1) {}
 
-            for (col = empty_index; col < field_size; ++col) {
+            for (col = empty_index; col + 1 < field_size; ++col) {
                 field[col][index] = field[col + 1][index];
             }
 
@@ -262,7 +269,7 @@ contract Lama {
         Player player = players[0];
         players[0] = players[1];
         players[1] = player;
-        StepFinished(players[1].player_address);
+        StepFinished(players[0].player_address);
         return "success";
     }
 
