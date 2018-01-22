@@ -158,6 +158,28 @@ function bindEvents() {
 		}
 	});
 
+	contract.Win({}, function(error, result) {
+		if (result.args.player_address == account) {
+			alert("You win.");
+		} else {
+			alert("You lose.");
+		}
+			//location.reload();
+
+	});
+
+}
+
+var field_update_queue = [];
+
+function DrawField() {
+	while(true) {
+		if (field_update_queue.length > 0) {
+			state = field_update_queue.splice(0, 1)[0];
+
+
+		}
+	}
 }
 
 function GetField() {
@@ -194,7 +216,7 @@ document.querySelector('#start').addEventListener('submit', function(ev) {
 		document.querySelector('#wait_contract').setAttribute("hidden", '');
 		document.querySelector('#wait_player').removeAttribute("hidden");
 		bindEvents();
-		contract.AddPlayer({from: account, gas:  3000000}, function(error, result) {});
+		contract.AddPlayer({from: account, gas:  3000000, value:100000000}, function(error, result) {});
 	});
 
 });

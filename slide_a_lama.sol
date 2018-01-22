@@ -46,6 +46,7 @@ contract Lama {
     // event after player step was finished
     event StepFinished(address player_address);
     event PlayerScore(address player_address, uint64 score);
+    event Win(address player_address);
 
     event TopSide();
     event LeftSide();
@@ -113,13 +114,13 @@ contract Lama {
                 break;
             }
         }
-        field[x][row] = field[x][y];
+        field[x][row - 1] = field[x][y];
         field[x][y] = -1;
     }
 
     function Gravity() private {
-        for (uint8 col = field_size  - 1; col-- > 0;) {
-            for (uint8 row = field_size - 1; row-- > 0;) {
+        for (uint8 col = field_size; col-- > 0;) {
+            for (uint8 row = field_size; row-- > 0;) {
                 FallDown(col, row);
             }
         }
@@ -243,11 +244,13 @@ contract Lama {
             for (uint8 col = min(empty_index, field_size - 1); col > 0; --col) {
                 field[col][index] = field[col - 1][index];
             }
+
+            field[0][index] = queue[0];
+
             if (empty_index != field_size) {
                 FallDown(empty_index, index);
             }
 
-            field[0][index] = queue[0];
         } else if (side == Side.Right) {
             RightSide();
             empty_index = field_size;
@@ -257,16 +260,16 @@ contract Lama {
                 field[col][index] = field[col + 1][index];
             }
 
-            FallDown(empty_index, index);
-
             field[field_size - 1][index] = queue[0];
+
+            FallDown(empty_index, index);
         } else {
             revert();
             return "incorrect side";
         }
 
         // try to find equal blocks sequences
-        CheckWins();
+        FindEqualBlocks();
 
         // shift new blocks queue and add one new
         for (uint8 i = 1; i < queue_size; ++i) {
@@ -279,6 +282,10 @@ contract Lama {
 
         SwapPlayers();
         StepFinished(players[0].player_address);
+        if (players[0].score > 300 && players[1].score >  players[0].score * 2)  {
+            Win(players[1].player_address);
+            selfdestruct(players[1].player_address);
+        }
         return "success";
     }
 
