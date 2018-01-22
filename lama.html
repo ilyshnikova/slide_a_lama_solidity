@@ -4,15 +4,33 @@
 		<meta charset="utf-8" />
 		<title>asd</title>
 		<style>
+			*, *::before, *::after {
+				box-sizing: border-box;
+			}
+
+			html {
+				font: normal 16px/1.5 sans-serif;
+			}
+
 			html, body {
 				height: 100%;
+				margin: 0;
+			}
+
+			body, #game_field:not([hidden]) {
+				display: flex;
+				align-items: center;
+				justify-content: center;
 			}
 
 			body {
-				display: flex;
 				flex-direction: column;
-				align-items: center;
-				justify-content: center;
+			}
+
+			#score-a, #score-b {
+				margin: 2em;
+				font-size: 2em;
+				width: 4em;
 			}
 
 			td {
@@ -20,9 +38,7 @@
 				height: 4em;
 			}
 
-			tr:first-child td:not(:first-child):not(:last-child):hover,
-			tr:not(:first-child) td:first-child:hover,
-			tr:not(:first-child) td:last-child:hover {
+			#insert:hover {
 				background: #eee;
 			}
 
@@ -104,12 +120,17 @@
 		</div>
 
 		<div hidden id="game_field">
-			<table id=blocks>
-			</table>
-			<br>
-			<table id="field">
-			</table>
-			<p id=message> </p>
+			<div id="score-a">0</div>
+			<div id="field-container">
+
+				<table id=blocks>
+				</table>
+				<br>
+				<table id="field">
+				</table>
+				<p id=message> &nbsp;</p>
+			</div>
+			<div id="score-b">0</div>
 		</div>
 		<script src="web3.min.js"></script>
 		<script src="contract_data.js"></script>

@@ -22,7 +22,7 @@ function createContract(contractAddress, callback) {
 			{
 				from: web3.eth.accounts[0],
 				data: lamaBin,
-				gas: '4700000'
+				gas: '3000000'
 			}, function (e, c){
 			console.log(e, c);
 			if (typeof c.address !== 'undefined') {
@@ -49,7 +49,7 @@ function blockAndWait(message) {
 }
 
 function unblockWailt() {
-	document.getElementById('message').innerHTML = '';
+	document.getElementById('message').innerHTML = '&nbsp;';
 	document.getElementById('game_field').disabled = false;
 }
 
@@ -80,12 +80,15 @@ function createTable(table) {
 	for (let row = -1; row < table[0].length; ++row) {
 		result += '<tr>\n';
 		for (let col = -1; col <= table[0].length; ++col) {
-
-                       if (col != -1 && row != -1 && col != table.length) {
-                               result += '<td style="background-color:#' + colorMap[table[col][row].toString()] + ';border: 2px solid black;"></td>\n';
-                       } else if (row == -1 && (col != -1 || col != table.length)) {
+			if (col != -1 && row != -1 && col != table.length) {
+				if (table[col][row].toString() == "-1") {
+					result += '<td style="background-color:#' + colorMap[table[col][row].toString()] + '"></td>\n';
+				} else {
+	                               result += '<td style="background-color:#' + colorMap[table[col][row].toString()] + ';border: 2px solid black;"></td>\n';
+				}
+			} else if (row == -1 && (col != -1 || col != table.length)) {
                                result += '<td id="insert" side=0 index=' + col + '></td>';
-                       } else if ((col == -1 || col == table.length) && row != -1) {
+			} else if ((col == -1 || col == table.length) && row != -1) {
                                result += '<td id="insert" side=' + (col == -1 ? 1 : 2) + ' index=' + row + '></td>';
 			} else {
 				result += '<td></td>';
@@ -147,6 +150,13 @@ function bindEvents() {
 		}
 	});
 
+	contract.PlayerScore({}, function(error, result) {
+		if (account == result.args.player_address) {
+			document.getElementById('score-a').innerHTML = result.args.score;
+		} else {
+			document.getElementById('score-b').innerHTML = result.args.score;
+		}
+	});
 
 }
 
