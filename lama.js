@@ -44,13 +44,13 @@ function showField() {
 }
 
 function blockAndWait(message) {
-	document.getElementById('field').innerHTML = message;
-	document.getElementById('start').disabled = true;
+	document.getElementById('message').innerHTML = message;
+	document.getElementById('game_field').disabled = true;
 }
 
 function unblockWailt() {
-	document.getElementById('field').innerHTML = '';
-	document.getElementById('start').disabled = false;
+	document.getElementById('message').innerHTML = '';
+	document.getElementById('game_field').disabled = false;
 }
 
 function bindBorders() {
@@ -61,9 +61,11 @@ function bindBorders() {
 		let index = cells[i].getAttribute('index');
 		let side = cells[i].getAttribute('side');
 		cells[i].addEventListener('click', function(ev) {
+			if (document.getElementById('game_field').disabled == true ) {
+				return;
+			}
 			blockAndWait("Wait for transaction...");
 			res = contract.Step(parseInt(index), parseInt(side), {from: account, gas: 2100000}, function(error, result) {console.log(result)});
-			blockAndWait("Wait for transaction " + res.address);
 			console.log(index, side);
 		});
 	}
@@ -85,6 +87,7 @@ function createTable(table) {
                                result += '<td id="insert" side=0 index=' + col + '></td>';
                        } else if ((col == -1 || col == table.length) && row != -1) {
                                result += '<td id="insert" side=' + (col == -1 ? 1 : 2) + ' index=' + row + '></td>';
+			} else {
 				result += '<td></td>';
 
 			}

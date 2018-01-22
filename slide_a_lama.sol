@@ -51,6 +51,16 @@ contract Lama {
     event LeftSide();
     event RightSide();
 
+    function SwapPlayers() private {
+        address player_address = players[0].player_address;
+        players[0].player_address = players[1].player_address;
+        players[1].player_address = player_address;
+
+        uint64 score = players[0].score;
+        players[0].score = players[1].score;
+        players[1].score = score;
+    }
+
     function AddPlayer() public payable {
         if (players[0].player_address == 0) {
             players[0] = Player({player_address: msg.sender, score: 0});
@@ -204,6 +214,7 @@ contract Lama {
         if (msg.sender != players[0].player_address) {
             return "incorrect player";
             revert();
+            return;
         }
 
         if (side == Side.Top) {
@@ -233,7 +244,7 @@ contract Lama {
                 field[col][index] = field[col - 1][index];
             }
             if (empty_index != field_size) {
-                FallDown(index, empty_index);
+                FallDown(empty_index, index);
             }
 
             field[0][index] = queue[0];
@@ -266,9 +277,7 @@ contract Lama {
         FieldChanging(field, field_update_index++);
         AvailableBlocks(queue);
 
-        Player player = players[0];
-        players[0] = players[1];
-        players[1] = player;
+        SwapPlayers();
         StepFinished(players[0].player_address);
         return "success";
     }
